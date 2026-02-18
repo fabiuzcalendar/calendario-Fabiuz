@@ -380,26 +380,47 @@ function toggleNotes() {
 /******** INPUT: TASTIERA (per tasti fisici) ********/
 (function keyboardMonthControl(){
   let last = 0;
-  const cooldownMs = 140; // reattivo ma evita doppio scatto
+  const cooldownMs = 70;      // più reattivo
+  let queued = 0;             // accumula 1 step se premi troppo veloce
+  let queueTimer = null;
+
+  function flushQueue(){
+    if (queued === 0) return;
+    const step = queued;
+    queued = 0;
+    changeMonth(step);
+  }
+
+  function enqueue(step){
+    // se arriva troppo presto, non lo perdiamo: lo accodiamo
+    queued += step;
+
+    if (queueTimer) clearTimeout(queueTimer);
+    queueTimer = setTimeout(() => {
+      flushQueue();
+      queueTimer = null;
+    }, cooldownMs);
+  }
 
   window.addEventListener("keydown", (e) => {
     if (e.repeat) return;
 
     const now = Date.now();
-    if (now - last < cooldownMs) return;
+    const tooSoon = (now - last < cooldownMs);
     last = now;
 
     if (e.key === "ArrowLeft") {
       e.preventDefault();
-      changeMonth(-1);
+      if (tooSoon) enqueue(-1);
+      else changeMonth(-1);
 
     } else if (e.key === "ArrowRight") {
       e.preventDefault();
-      changeMonth(1);
+      if (tooSoon) enqueue(1);
+      else changeMonth(1);
 
     } else if (e.key === "Home") {
       e.preventDefault();
-      // se note aperte, chiudi e resetta
       if (notesOpen) closeNotes();
       else resetToToday();
 
@@ -409,4 +430,3 @@ function toggleNotes() {
     }
   }, { passive: false });
 })();
-
