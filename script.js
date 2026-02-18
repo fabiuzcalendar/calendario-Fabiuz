@@ -236,12 +236,42 @@ renderAll();
   applyAll();
 })();
 /******** INPUT: TASTIERA (per tasti fisici) ********/
+
+let notesOpen = false;
+let notesTimer = null;
+const NOTES_TIMEOUT_MS = 45000; // 45s (regolabile)
+
+function openNotes() {
+  notesOpen = true;
+
+  // TODO: qui decideremo se aprire overlay o pagina
+  // Per ora: pagina separata (placeholder)
+  window.location.href = "/notes.html";
+
+  if (notesTimer) clearTimeout(notesTimer);
+  notesTimer = setTimeout(() => {
+    notesOpen = false;
+    resetToToday();
+  }, NOTES_TIMEOUT_MS);
+}
+
+function closeNotes() {
+  notesOpen = false;
+  if (notesTimer) clearTimeout(notesTimer);
+  notesTimer = null;
+  resetToToday();
+}
+
+function toggleNotes() {
+  if (!notesOpen) openNotes();
+  else closeNotes();
+}
+
 (function keyboardMonthControl(){
   let last = 0;
   const cooldownMs = 180; // evita doppio scatto
 
   window.addEventListener("keydown", (e) => {
-    // evita repeat quando tieni premuto
     if (e.repeat) return;
 
     const now = Date.now();
@@ -251,15 +281,19 @@ renderAll();
     if (e.key === "ArrowLeft") {
       e.preventDefault();
       changeMonth(-1);
+
     } else if (e.key === "ArrowRight") {
       e.preventDefault();
       changeMonth(1);
+
     } else if (e.key === "Home") {
       e.preventDefault();
-      resetToToday();
+      closeNotes(); // se sei nelle note, torna al calendario
+      // closeNotes() già fa resetToToday()
+
+    } else if (e.key === "n" || e.key === "N") {
+      e.preventDefault();
+      toggleNotes();
     }
   }, { passive: false });
 })();
-
-
-
