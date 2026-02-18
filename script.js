@@ -198,19 +198,18 @@ renderAll();
   if (!app) return;
 
   function setMode(){
-  const w = window.innerWidth;
-  const h = window.innerHeight;
+    const w = window.innerWidth;
+    const h = window.innerHeight;
 
-  // Se siamo su TV landscape (w>h) ruotiamo per avere calendario verticale
-  if (w > h) {
-    app.classList.add("rotated");
-    app.classList.remove("normal");
-  } else {
-    app.classList.add("normal");
-    app.classList.remove("rotated");
+    // Se siamo su TV landscape (w>h) ruotiamo per avere calendario verticale
+    if (w > h) {
+      app.classList.add("rotated");
+      app.classList.remove("normal");
+    } else {
+      app.classList.add("normal");
+      app.classList.remove("rotated");
+    }
   }
-}
-
 
   function setFillScale(){
     // reset scala (variabile CSS)
@@ -235,30 +234,109 @@ renderAll();
   window.addEventListener("resize", applyAll);
   applyAll();
 })();
-/******** INPUT: TASTIERA (per tasti fisici) ********/
 
+/******** NOTE / LISTA SPESA (OVERLAY) ********/
+const NOTES_TIMEOUT_MS = 45000; // 45s (regolabile)
 let notesOpen = false;
 let notesTimer = null;
-const NOTES_TIMEOUT_MS = 45000; // 45s (regolabile)
+
+const NOTES_STORAGE_KEY = "calendario_notes_lines_v1";
+
+function normLine(s) {
+  return (s || "")
+    .replace(/\r/g, "")
+    .trim();
+}
+
+function parseLines(text) {
+  return normLine(text)
+    .split("\n")
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
+}
+
+function stripDash(line) {
+  // consenti "- carote" oppure "carote"
+  return line.replace(/^[-•]\s*/,"").trim();
+}
+
+function loadSavedText() {
+  return localStorage.getItem(NOTES_STORAGE_KEY) || "";
+}
+
+function saveText(text) {
+  localStorage.setItem(NOTES_STORAGE_KEY, text);
+}
+
+function buildListFromTextarea() {
+  const input = document.getElementById("notes-input");
+  const list = document.getElementById("notes-list");
+  const count = document.getElementById("notes-count");
+  if (!input || !list || !count) return;
+
+  const lines = parseLines(input.value).map(stripDash).filter(Boolean);
+
+  list.innerHTML = "";
+  lines.forEach((itemText, idx) => {
+    const div = document.createElement("div");
+    div.className = "notes-item";
+    div.textContent = `- ${itemText}`;
+    div.title = "Click per eliminare";
+
+    div.addEventListener("click", () => {
+      // elimina SOLO quella riga
+      const newLines = lines.filter((_, i) => i !== idx);
+      const newText = newLines.map(x => `- ${x}`).join("\n");
+      input.value = newText;
+      saveText(newText);
+      buildListFromTextarea();
+      resetNotesTimer();
+    });
+
+    list.appendChild(div);
+  });
+
+  count.textContent = `${lines.length} voci`;
+}
+
+function resetNotesTimer() {
+  if (notesTimer) clearTimeout(notesTimer);
+  notesTimer = setTimeout(() => closeNotes(), NOTES_TIMEOUT_MS);
+}
 
 function openNotes() {
+  const overlay = document.getElementById("notes-overlay");
+  const input = document.getElementById("notes-input");
+  if (!overlay || !input) return;
+
   notesOpen = true;
+  overlay.classList.remove("hidden");
+  overlay.setAttribute("aria-hidden", "false");
 
-  // TODO: qui decideremo se aprire overlay o pagina
-  // Per ora: pagina separata (placeholder)
-  window.location.href = "/notes.html";
+  // carica testo salvato
+  input.value = loadSavedText();
 
-  if (notesTimer) clearTimeout(notesTimer);
-  notesTimer = setTimeout(() => {
-    notesOpen = false;
-    resetToToday();
-  }, NOTES_TIMEOUT_MS);
+  // render lista
+  buildListFromTextarea();
+
+  // focus per scrivere subito (utile anche con tastiera)
+  setTimeout(() => input.focus(), 50);
+
+  resetNotesTimer();
 }
 
 function closeNotes() {
+  const overlay = document.getElementById("notes-overlay");
+  if (!overlay) return;
+
   notesOpen = false;
+  overlay.classList.add("hidden");
+  overlay.setAttribute("aria-hidden", "true");
+
   if (notesTimer) clearTimeout(notesTimer);
   notesTimer = null;
+
+  // torna al mese attuale (come volevi)
   resetToToday();
 }
 
@@ -267,9 +345,42 @@ function toggleNotes() {
   else closeNotes();
 }
 
+// Hook UI: bottone chiudi + typing salva
+(function notesUIBoot(){
+  const input = document.getElementById("notes-input");
+  const closeBtn = document.getElementById("notes-close");
+  const overlay = document.getElementById("notes-overlay");
+
+  if (closeBtn) closeBtn.addEventListener("click", () => closeNotes());
+
+  if (input) {
+    input.addEventListener("input", () => {
+      saveText(input.value);
+      buildListFromTextarea();
+      resetNotesTimer();
+    });
+
+    // se premi ESC chiude (utile da tastiera)
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeNotes();
+      }
+    });
+  }
+
+  // click sullo sfondo scuro chiude
+  if (overlay) {
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) closeNotes();
+    });
+  }
+})();
+
+/******** INPUT: TASTIERA (per tasti fisici) ********/
 (function keyboardMonthControl(){
   let last = 0;
-  const cooldownMs = 180; // evita doppio scatto
+  const cooldownMs = 140; // reattivo ma evita doppio scatto
 
   window.addEventListener("keydown", (e) => {
     if (e.repeat) return;
@@ -288,8 +399,9 @@ function toggleNotes() {
 
     } else if (e.key === "Home") {
       e.preventDefault();
-      closeNotes(); // se sei nelle note, torna al calendario
-      // closeNotes() già fa resetToToday()
+      // se note aperte, chiudi e resetta
+      if (notesOpen) closeNotes();
+      else resetToToday();
 
     } else if (e.key === "n" || e.key === "N") {
       e.preventDefault();
@@ -297,3 +409,4 @@ function toggleNotes() {
     }
   }, { passive: false });
 })();
+
