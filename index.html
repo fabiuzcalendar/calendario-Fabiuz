@@ -55,4 +55,34 @@
 
 </body>
 </html>
+<!-- OVERLAY NOTE / LISTA SPESA -->
+<div id="notes-overlay" class="notes-overlay hidden" aria-hidden="true">
+  <div class="notes-box">
+    <div class="notes-header">
+      <div class="notes-title">NOTE / LISTA SPESA</div>
+      <div class="notes-hint">
+        Scrivi sotto (una voce per riga). Click su una riga = elimina.
+      </div>
+    </div>
+
+    <textarea id="notes-input" class="notes-input"
+      placeholder="- carote
+- fagioli
+- carta igienica"></textarea>
+
+    <div class="notes-footer">
+      <div class="notes-footer-left">
+        <span id="notes-count">0 voci</span>
+      </div>
+      <div class="notes-footer-right">
+        <button id="notes-close" class="notes-btn" type="button">Chiudi</button>
+      </div>
+    </div>
+
+    <div class="notes-list-wrap">
+      <div id="notes-list" class="notes-list"></div>
+    </div>
+  </div>
+</div>
+
 
