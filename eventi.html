@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Eventi</title>
+  <style>
+    body{margin:0;font-family:system-ui;background:#0b0b0b;color:#fff}
+    .wrap{min-height:100vh;display:grid;place-items:center;padding:16px}
+    .card{width:min(520px,96vw);background:#141414;border:1px solid #2a2a2a;border-radius:18px;padding:16px}
+    h1{margin:0 0 10px 0;font-size:20px}
+    label{display:block;margin-top:10px;color:#aaa;font-weight:800;font-size:13px}
+    input,textarea{
+      width:100%;margin-top:6px;border-radius:14px;border:1px solid #2f2f2f;
+      background:#111;color:#fff;padding:12px;font-size:16px
+    }
+    textarea{height:140px}
+    .row{display:flex;gap:10px;margin-top:12px}
+    .btn{
+      flex:1;padding:14px 12px;border-radius:14px;border:1px solid #2f2f2f;
+      background:#0f0f0f;color:#fff;font-weight:900;font-size:16px
+    }
+    .msg{margin-top:10px;color:#aaa;font-weight:800;white-space:pre-wrap}
+    .small{font-size:12px;color:#888;margin-top:10px;line-height:1.35}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="card" id="pin-card">
+      <h1>🔒 PIN</h1>
+      <label>PIN (4 cifre)</label>
+      <input id="pin" inputmode="numeric" maxlength="4" placeholder="••••" />
+      <div class="row">
+        <button class="btn" id="pin-ok">ENTRA</button>
+        <button class="btn" id="pin-reset">RESET</button>
+      </div>
+      <div class="msg" id="pin-msg"></div>
+      <div class="small">Blocco rapido sul telefono (non sicurezza “militare”).</div>
+    </div>
+
+    <div class="card" id="app-card" style="display:none">
+      <h1>➕ Aggiungi evento</h1>
+
+      <label>Data</label>
+      <input id="date" type="date" />
+
+      <label>Nota</label>
+      <textarea id="text" spellcheck="false" placeholder="Es: Dentista 15:30"></textarea>
+
+      <div class="row">
+        <button class="btn" id="save">SALVA</button>
+        <button class="btn" id="done">SEGNA FATTO</button>
+      </div>
+
+      <div class="msg" id="msg"></div>
+      <div class="small">Il token GitHub viene salvato SOLO su questo telefono.</div>
+    </div>
+
+  </div>
+
+<script>
+/*** CONFIG: cambia questi 2 valori ***/
+const OWNER = "fabiuzcalendar";   // es: "fabio123"
+const REPO  = "calendario-Fabiuz";   // es: "calendario"
+const BRANCH = "main";
+const FILE_PATH = "events.json";
+
+/*** PIN ***/
+const PIN_KEY = "cal_pin_v1";
+const PIN_SESSION_OK = "cal_pin_ok_v1";
+function show(el, yes){ el.style.display = yes ? "" : "none"; }
+function getSavedPin(){ return localStorage.getItem(PIN_KEY) || ""; }
+function ensurePinExists(){
+  let p = getSavedPin();
+  if (p) return p;
+  p = prompt("Imposta un PIN a 4 cifre (solo per questo telefono):");
+  if (!p) throw new Error("PIN mancante.");
+  p = String(p).trim();
+  if (!/^\d{4}$/.test(p)) throw new Error("Il PIN deve essere di 4 cifre.");
+  localStorage.setItem(PIN_KEY, p);
+  return p;
+}
+function pinBoot(){
+  const pinCard = document.getElementById("pin-card");
+  const appCard = document.getElementById("app-card");
+  const pinInput = document.getElementById("pin");
+  const pinMsg = document.getElementById("pin-msg");
+  const okBtn = document.getElementById("pin-ok");
+  const resetBtn = document.getElementById("pin-reset");
+
+  if (sessionStorage.getItem(PIN_SESSION_OK) === "1") {
+    show(pinCard, false);
+    show(appCard, true);
+    return;
+  }
+  okBtn.addEventListener("click", () => {
+    try{
+      const real = ensurePinExists();
+      const entered = (pinInput.value || "").trim();
+      if (entered !== real) { pinMsg.textContent = "❌ PIN errato"; pinInput.focus(); return; }
+      sessionStorage.setItem(PIN_SESSION_OK, "1");
+      show(pinCard, false);
+      show(appCard, true);
+      pinMsg.textContent = "";
+    }catch(e){ pinMsg.textContent = "❌ " + e.message; }
+  });
+  resetBtn.addEventListener("click", () => {
+    localStorage.removeItem(PIN_KEY);
+    sessionStorage.removeItem(PIN_SESSION_OK);
+    pinMsg.textContent = "PIN resettato. Premi ENTRA per impostarne uno nuovo.";
+    pinInput.value = "";
+    pinInput.focus();
+  });
+  pinInput.addEventListener("keydown", (e) => { if (e.key === "Enter") okBtn.click(); });
+}
+pinBoot();
+
+/*** TOKEN ***/
+const TOKEN_KEY = "cal_token_v1";
+function getToken(){ return localStorage.getItem(TOKEN_KEY) || ""; }
+function ensureToken(){
+  let t = getToken();
+  if (t) return t;
+  t = prompt("Incolla il token GitHub (salvato SOLO su questo telefono):");
+  if (!t) throw new Error("Token mancante.");
+  localStorage.setItem(TOKEN_KEY, t.trim());
+  return t.trim();
+}
+
+/*** UI ***/
+const $ = (id) => document.getElementById(id);
+const msg = (s) => { $("msg").textContent = s || ""; };
+function isoToday(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+
+/*** GitHub API: GET file (sha+contenuto) + PUT update ***/
+async function ghGetJson(){
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}?ref=${encodeURIComponent(BRANCH)}`;
+  const res = await fetch(url, {
+    headers: {
+      "Accept":"application/vnd.github+json",
+      "Authorization": `Bearer ${ensureToken()}`
+    }
+  });
+  if (!res.ok) throw new Error(`GET failed: HTTP ${res.status}`);
+  const data = await res.json();
+  const content = atob(data.content.replace(/\n/g,""));
+  return { json: JSON.parse(content || "{}"), sha: data.sha };
+}
+
+async function ghPutJson(newObj, sha){
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}`;
+  const body = {
+    message: `Update events ${new Date().toISOString()}`,
+    content: btoa(unescape(encodeURIComponent(JSON.stringify(newObj, null, 2)))),
+    branch: BRANCH,
+    sha
+  };
+
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: {
+      "Accept":"application/vnd.github+json",
+      "Content-Type":"application/json",
+      "Authorization": `Bearer ${ensureToken()}`
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const t = await res.text().catch(()=> "");
+    throw new Error(`PUT failed: HTTP ${res.status}\n${t}`);
+  }
+  return await res.json();
+}
+
+async function saveEvent(markDone){
+  const date = $("date").value;
+  const text = $("text").value.trim();
+  if (!date) return msg("⚠️ Scegli una data.");
+  if (!text) return msg("⚠️ Scrivi una nota.");
+
+  msg("Salvo...");
+  const { json, sha } = await ghGetJson();
+  json[date] = { text, done: !!markDone };
+  await ghPutJson(json, sha);
+  msg("✅ Salvato");
+  $("text").value = "";
+}
+
+async function markDoneForDate(){
+  const date = $("date").value;
+  if (!date) return msg("⚠️ Scegli una data.");
+  msg("Aggiorno...");
+  const { json, sha } = await ghGetJson();
+  if (!json[date]) return msg("⚠️ Nessun evento in quella data.");
+  json[date].done = true;
+  await ghPutJson(json, sha);
+  msg("✅ Segnato come fatto");
+}
+
+$("date").value = isoToday();
+$("save").addEventListener("click", () => saveEvent(false).catch(e=>msg("❌ "+e.message)));
+$("done").addEventListener("click", () => markDoneForDate().catch(e=>msg("❌ "+e.message)));
+</script>
+</body>
+</html>
