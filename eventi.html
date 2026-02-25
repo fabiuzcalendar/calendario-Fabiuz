@@ -26,7 +26,7 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="card" id="app-card">
+    <div class="card">
       <h1>➕ Aggiungi evento</h1>
 
       <label>Data</label>
@@ -37,7 +37,6 @@
 
       <div class="row">
         <button class="btn" id="save">SALVA</button>
-        <button class="btn" id="done">SEGNA FATTO</button>
       </div>
 
       <div class="msg" id="msg"></div>
@@ -46,7 +45,6 @@
   </div>
 
 <script>
-/*** CONFIG ***/
 const OWNER = "fabiuzcalendar";
 const REPO  = "calendario-Fabiuz";
 const BRANCH = "main";
@@ -64,7 +62,6 @@ function ensureToken(){
   return t.trim();
 }
 
-/*** UI ***/
 const $ = (id) => document.getElementById(id);
 const msg = (s) => { $("msg").textContent = s || ""; };
 
@@ -76,7 +73,6 @@ function isoToday(){
   return `${y}-${m}-${day}`;
 }
 
-/*** GitHub API: GET file (sha+contenuto) + PUT update ***/
 async function ghGetJson(){
   const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}?ref=${encodeURIComponent(BRANCH)}`;
   const res = await fetch(url, {
@@ -117,35 +113,26 @@ async function ghPutJson(newObj, sha){
   return await res.json();
 }
 
-async function saveEvent(markDone){
+async function saveEvent(){
   const date = $("date").value;
   const text = $("text").value.trim();
+
   if (!date) return msg("⚠️ Scegli una data.");
   if (!text) return msg("⚠️ Scrivi una nota.");
 
   msg("Salvo...");
   const { json, sha } = await ghGetJson();
-  json[date] = { text, done: !!markDone };
+
+  json[date] = { text };
+
   await ghPutJson(json, sha);
+
   msg("✅ Salvato");
   $("text").value = "";
 }
 
-async function markDoneForDate(){
-  const date = $("date").value;
-  if (!date) return msg("⚠️ Scegli una data.");
-  msg("Aggiorno...");
-  const { json, sha } = await ghGetJson();
-  if (!json[date]) return msg("⚠️ Nessun evento in quella data.");
-  json[date].done = true;
-  await ghPutJson(json, sha);
-  msg("✅ Segnato come fatto");
-}
-
-/*** boot ***/
 $("date").value = isoToday();
-$("save").addEventListener("click", () => saveEvent(false).catch(e=>msg("❌ "+e.message)));
-$("done").addEventListener("click", () => markDoneForDate().catch(e=>msg("❌ "+e.message)));
+$("save").addEventListener("click", () => saveEvent().catch(e=>msg("❌ "+e.message)));
 </script>
 </body>
 </html>
