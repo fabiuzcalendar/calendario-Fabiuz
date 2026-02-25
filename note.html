@@ -28,6 +28,7 @@
       flex:1;padding:14px 12px;border-radius:14px;border:1px solid #2f2f2f;
       background:#0f0f0f;color:#fff;font-weight:900;font-size:16px
     }
+    .btn:disabled{opacity:.5}
     .msg{margin-top:10px;color:#aaa;font-weight:800;white-space:pre-wrap}
     .small{font-size:12px;color:#888;margin-top:10px;line-height:1.35}
   </style>
@@ -71,17 +72,20 @@ function ensureToken(){
   return t.trim();
 }
 
-const t = document.getElementById("t");
-const m = document.getElementById("m");
-const msg = (s) => m.textContent = s || "";
+const tEl = document.getElementById("t");
+const mEl = document.getElementById("m");
+const btnReload = document.getElementById("reload");
+const btnSave = document.getElementById("save");
+const msg = (s) => mEl.textContent = s || "";
 
 async function ghGetText(){
-  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}?ref=${encodeURIComponent(BRANCH)}`;
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}?ref=${encodeURIComponent(BRANCH)}&t=${Date.now()}`;
   const res = await fetch(url, {
     headers: {
       "Accept":"application/vnd.github+json",
       "Authorization": `Bearer ${ensureToken()}`
-    }
+    },
+    cache: "no-store"
   });
   if (!res.ok) throw new Error(`GET failed: HTTP ${res.status}`);
   const data = await res.json();
@@ -110,26 +114,56 @@ async function ghPutText(text, sha){
 
   if (!res.ok) {
     const tx = await res.text().catch(()=> "");
-    throw new Error(`PUT failed: HTTP ${res.status}\n${tx}`);
+    const err = new Error(`PUT failed: HTTP ${res.status}\n${tx}`);
+    err.status = res.status;
+    throw err;
   }
 }
 
 async function reload(){
   msg("Carico...");
   const { text } = await ghGetText();
-  t.value = text || "";
+  tEl.value = text || "";
   msg("✅ Caricato");
 }
 
 async function save(){
-  msg("Salvo...");
-  const { sha } = await ghGetText();
-  await ghPutText(t.value, sha);
-  msg("✅ Salvato");
+  btnSave.disabled = true;
+  btnReload.disabled = true;
+
+  try{
+    msg("Salvo...");
+
+    // 1) prendo sha aggiornato
+    let { sha } = await ghGetText();
+
+    // 2) provo PUT
+    try{
+      await ghPutText(tEl.value, sha);
+      msg("✅ Salvato");
+      return;
+    }catch(e){
+      // 409 = sha non match → riprova una volta
+      if (e.status === 409){
+        msg("⚠️ Conflitto (409). Riprovo...");
+        const fresh = await ghGetText();
+        await ghPutText(tEl.value, fresh.sha);
+        msg("✅ Salvato (risolto conflitto)");
+        return;
+      }
+      throw e;
+    }
+
+  }catch(e){
+    msg("❌ " + e.message + "\n\nConsiglio: premi RICARICA e poi SALVA.\nE non tenere note.html aperto in 2 schede.");
+  }finally{
+    btnSave.disabled = false;
+    btnReload.disabled = false;
+  }
 }
 
-document.getElementById("reload").addEventListener("click", ()=>reload().catch(e=>msg("❌ "+e.message)));
-document.getElementById("save").addEventListener("click", ()=>save().catch(e=>msg("❌ "+e.message)));
+btnReload.addEventListener("click", ()=>reload().catch(e=>msg("❌ "+e.message)));
+btnSave.addEventListener("click", ()=>save());
 
 reload();
 </script>
