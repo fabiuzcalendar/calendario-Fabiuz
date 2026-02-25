@@ -456,5 +456,15 @@ body.night #calendar-app.rotated .side-month .day{
   text-decoration: line-through;
   opacity: .6;
 }
+/* FIX OVERLAY NOTE quando calendario è ruotato */
+#calendar-app.rotated ~ #notes-overlay,
+#calendar-app.rotated + #notes-overlay,
+#calendar-app.rotated #notes-overlay,
+body.rotated #notes-overlay{
+  transform: rotate(90deg);
+  transform-origin: center center;
+  width: 100vh;
+  height: 100vw;
+}
 
 
