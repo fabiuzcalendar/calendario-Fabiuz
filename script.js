@@ -114,6 +114,7 @@ const birthdays = {
   "07-03": "Compleanno Mamma",
   "07-06": "Compleanno Francesco",
   "08-02": "Compleanno Fabio",
+  "02-08": "Compleanno Katiuscia &#9829",
   "01-29": "Compleanno Papà"
 };
 
@@ -390,5 +391,6 @@ function stopFastNotesRefresh(){
   window.addEventListener("resize", applyAll);
   applyAll();
 })();
+
 
 
