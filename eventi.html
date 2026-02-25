@@ -26,20 +26,7 @@
 </head>
 <body>
   <div class="wrap">
-
-    <div class="card" id="pin-card">
-      <h1>🔒 PIN</h1>
-      <label>PIN (4 cifre)</label>
-      <input id="pin" inputmode="numeric" maxlength="4" placeholder="••••" />
-      <div class="row">
-        <button class="btn" id="pin-ok">ENTRA</button>
-        <button class="btn" id="pin-reset">RESET</button>
-      </div>
-      <div class="msg" id="pin-msg"></div>
-      <div class="small">Blocco rapido sul telefono (non sicurezza “militare”).</div>
-    </div>
-
-    <div class="card" id="app-card" style="display:none">
+    <div class="card" id="app-card">
       <h1>➕ Aggiungi evento</h1>
 
       <label>Data</label>
@@ -56,65 +43,14 @@
       <div class="msg" id="msg"></div>
       <div class="small">Il token GitHub viene salvato SOLO su questo telefono.</div>
     </div>
-
   </div>
 
 <script>
-/*** CONFIG: cambia questi 2 valori ***/
-const OWNER = "fabiuzcalendar";   // es: "fabio123"
-const REPO  = "calendario-Fabiuz";   // es: "calendario"
+/*** CONFIG ***/
+const OWNER = "fabiuzcalendar";
+const REPO  = "calendario-Fabiuz";
 const BRANCH = "main";
 const FILE_PATH = "events.json";
-
-/*** PIN ***/
-const PIN_KEY = "cal_pin_v1";
-const PIN_SESSION_OK = "cal_pin_ok_v1";
-function show(el, yes){ el.style.display = yes ? "" : "none"; }
-function getSavedPin(){ return localStorage.getItem(PIN_KEY) || ""; }
-function ensurePinExists(){
-  let p = getSavedPin();
-  if (p) return p;
-  p = prompt("Imposta un PIN a 4 cifre (solo per questo telefono):");
-  if (!p) throw new Error("PIN mancante.");
-  p = String(p).trim();
-  if (!/^\d{4}$/.test(p)) throw new Error("Il PIN deve essere di 4 cifre.");
-  localStorage.setItem(PIN_KEY, p);
-  return p;
-}
-function pinBoot(){
-  const pinCard = document.getElementById("pin-card");
-  const appCard = document.getElementById("app-card");
-  const pinInput = document.getElementById("pin");
-  const pinMsg = document.getElementById("pin-msg");
-  const okBtn = document.getElementById("pin-ok");
-  const resetBtn = document.getElementById("pin-reset");
-
-  if (sessionStorage.getItem(PIN_SESSION_OK) === "1") {
-    show(pinCard, false);
-    show(appCard, true);
-    return;
-  }
-  okBtn.addEventListener("click", () => {
-    try{
-      const real = ensurePinExists();
-      const entered = (pinInput.value || "").trim();
-      if (entered !== real) { pinMsg.textContent = "❌ PIN errato"; pinInput.focus(); return; }
-      sessionStorage.setItem(PIN_SESSION_OK, "1");
-      show(pinCard, false);
-      show(appCard, true);
-      pinMsg.textContent = "";
-    }catch(e){ pinMsg.textContent = "❌ " + e.message; }
-  });
-  resetBtn.addEventListener("click", () => {
-    localStorage.removeItem(PIN_KEY);
-    sessionStorage.removeItem(PIN_SESSION_OK);
-    pinMsg.textContent = "PIN resettato. Premi ENTRA per impostarne uno nuovo.";
-    pinInput.value = "";
-    pinInput.focus();
-  });
-  pinInput.addEventListener("keydown", (e) => { if (e.key === "Enter") okBtn.click(); });
-}
-pinBoot();
 
 /*** TOKEN ***/
 const TOKEN_KEY = "cal_token_v1";
@@ -131,6 +67,7 @@ function ensureToken(){
 /*** UI ***/
 const $ = (id) => document.getElementById(id);
 const msg = (s) => { $("msg").textContent = s || ""; };
+
 function isoToday(){
   const d = new Date();
   const y = d.getFullYear();
@@ -150,7 +87,7 @@ async function ghGetJson(){
   });
   if (!res.ok) throw new Error(`GET failed: HTTP ${res.status}`);
   const data = await res.json();
-  const content = atob(data.content.replace(/\n/g,""));
+  const content = atob((data.content || "").replace(/\n/g,""));
   return { json: JSON.parse(content || "{}"), sha: data.sha };
 }
 
@@ -205,6 +142,7 @@ async function markDoneForDate(){
   msg("✅ Segnato come fatto");
 }
 
+/*** boot ***/
 $("date").value = isoToday();
 $("save").addEventListener("click", () => saveEvent(false).catch(e=>msg("❌ "+e.message)));
 $("done").addEventListener("click", () => markDoneForDate().catch(e=>msg("❌ "+e.message)));
