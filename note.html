@@ -7,11 +7,21 @@
   <style>
     body{margin:0;font-family:system-ui;background:#0b0b0b;color:#fff}
     .wrap{min-height:100vh;display:grid;place-items:center;padding:16px}
-    .card{width:min(720px,96vw);background:#141414;border:1px solid #2a2a2a;border-radius:18px;padding:16px}
+    .card{width:min(820px,96vw);background:#141414;border:1px solid #2a2a2a;border-radius:18px;padding:16px}
     h1{margin:0 0 10px 0;font-size:20px}
     textarea{
-      width:100%;height:65vh;margin-top:8px;border-radius:14px;border:1px solid #2f2f2f;
-      background:#111;color:#fff;padding:12px;font-size:16px;line-height:1.35
+      width:100%;
+      height:65vh;
+      margin-top:8px;
+      border-radius:14px;
+      border:1px solid #2f2f2f;
+      background:#111;
+      color:#fff;
+      padding:12px;
+      font-size:16px;
+      line-height:1.35;
+      outline:none;
+      resize:none;
     }
     .row{display:flex;gap:10px;margin-top:12px}
     .btn{
@@ -19,29 +29,37 @@
       background:#0f0f0f;color:#fff;font-weight:900;font-size:16px
     }
     .msg{margin-top:10px;color:#aaa;font-weight:800;white-space:pre-wrap}
+    .small{font-size:12px;color:#888;margin-top:10px;line-height:1.35}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>📝 Note (foglio bianco)</h1>
-      <textarea id="t" spellcheck="false" placeholder="Scrivi liberamente..."></textarea>
+      <h1>📝 Note / Lista spesa</h1>
+      <div class="small">Scrivi come vuoi. Una riga = una voce. Premi SALVA.</div>
+
+      <textarea id="t" spellcheck="false"
+        placeholder="- carote
+- fagioli
+- carta igienica"></textarea>
+
       <div class="row">
-        <button class="btn" id="load">RICARICA</button>
+        <button class="btn" id="reload">RICARICA</button>
         <button class="btn" id="save">SALVA</button>
       </div>
+
       <div class="msg" id="m"></div>
+      <div class="small">Il token GitHub viene salvato SOLO su questo telefono.</div>
     </div>
   </div>
 
 <script>
-/*** CONFIG: cambia questi 2 valori ***/
 const OWNER = "fabiuzcalendar";
 const REPO  = "calendario-Fabiuz";
 const BRANCH = "main";
 const FILE_PATH = "notes.txt";
 
-/*** TOKEN (riusa lo stesso di eventi) ***/
+/*** TOKEN ***/
 const TOKEN_KEY = "cal_token_v1";
 function getToken(){ return localStorage.getItem(TOKEN_KEY) || ""; }
 function ensureToken(){
@@ -60,11 +78,14 @@ const msg = (s) => m.textContent = s || "";
 async function ghGetText(){
   const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}?ref=${encodeURIComponent(BRANCH)}`;
   const res = await fetch(url, {
-    headers: { "Accept":"application/vnd.github+json", "Authorization": `Bearer ${ensureToken()}` }
+    headers: {
+      "Accept":"application/vnd.github+json",
+      "Authorization": `Bearer ${ensureToken()}`
+    }
   });
   if (!res.ok) throw new Error(`GET failed: HTTP ${res.status}`);
   const data = await res.json();
-  const content = atob(data.content.replace(/\n/g,""));
+  const content = atob((data.content || "").replace(/\n/g,""));
   return { text: decodeURIComponent(escape(content)), sha: data.sha };
 }
 
@@ -76,6 +97,7 @@ async function ghPutText(text, sha){
     branch: BRANCH,
     sha
   };
+
   const res = await fetch(url, {
     method: "PUT",
     headers: {
@@ -85,10 +107,14 @@ async function ghPutText(text, sha){
     },
     body: JSON.stringify(body)
   });
-  if (!res.ok) throw new Error(`PUT failed: HTTP ${res.status}`);
+
+  if (!res.ok) {
+    const tx = await res.text().catch(()=> "");
+    throw new Error(`PUT failed: HTTP ${res.status}\n${tx}`);
+  }
 }
 
-async function load(){
+async function reload(){
   msg("Carico...");
   const { text } = await ghGetText();
   t.value = text || "";
@@ -102,10 +128,10 @@ async function save(){
   msg("✅ Salvato");
 }
 
-document.getElementById("load").addEventListener("click", ()=>load().catch(e=>msg("❌ "+e.message)));
+document.getElementById("reload").addEventListener("click", ()=>reload().catch(e=>msg("❌ "+e.message)));
 document.getElementById("save").addEventListener("click", ()=>save().catch(e=>msg("❌ "+e.message)));
 
-load();
+reload();
 </script>
 </body>
 </html>
