@@ -798,11 +798,12 @@ body.night #calendar-app.rotated .side-month .day{
 #calendar-app.rotated + #notes-overlay,
 #calendar-app.rotated #notes-overlay,
 body.rotated #notes-overlay{
-  transform: rotate(180deg);
+  transform: rotate(-180deg);
   transform-origin: center center;
   width: 100vh;
   height: 100vw;
 }
+
 
 
 
