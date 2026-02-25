@@ -337,3 +337,43 @@ setInterval(refreshNotes, 60000);
     }
   }, { passive:false });
 })();
+/******** KIOSK ROTATION + FILL ********/
+(function kioskRotateAndFill(){
+  const app = document.getElementById("calendar-app");
+  if (!app) return;
+
+  function setMode(){
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+
+    if (w > h) {
+      app.classList.add("rotated");
+      app.classList.remove("normal");
+    } else {
+      app.classList.add("normal");
+      app.classList.remove("rotated");
+    }
+  }
+
+  function setFillScale(){
+    app.style.setProperty("--kiosk-scale", "1");
+
+    const rect = app.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const s = Math.max(vw / rect.width, vh / rect.height);
+    const safe = Math.max(0.1, Math.min(s, 3));
+
+    app.style.setProperty("--kiosk-scale", String(safe));
+  }
+
+  function applyAll(){
+    setMode();
+    setTimeout(setFillScale, 80);
+  }
+
+  window.addEventListener("resize", applyAll);
+  applyAll();
+})();
+
