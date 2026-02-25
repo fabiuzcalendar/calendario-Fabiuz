@@ -269,10 +269,24 @@ function toggleNotes(){
 /******** AUTO ********/
 renderAll();
 refreshEvents();
-setInterval(refreshEvents, 60000);
+setInterval(refreshEvents, 30000);
 
 refreshNotes();
-setInterval(refreshNotes, 60000);
+setInterval(refreshNotes, 10000); // ogni 10s
+
+// mentre le note sono aperte: refresh super rapido
+let notesFastTimer = null;
+function startFastNotesRefresh(){
+  if (notesFastTimer) return;
+  notesFastTimer = setInterval(() => {
+    refreshNotes().then(renderNotesOverlay);
+  }, 2000); // ogni 2s
+}
+function stopFastNotesRefresh(){
+  if (!notesFastTimer) return;
+  clearInterval(notesFastTimer);
+  notesFastTimer = null;
+}
 
 (function midnightReload(){
   const now = new Date();
@@ -376,4 +390,5 @@ setInterval(refreshNotes, 60000);
   window.addEventListener("resize", applyAll);
   applyAll();
 })();
+
 
