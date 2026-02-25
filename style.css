@@ -446,5 +446,15 @@ body.night #calendar-app.rotated .side-month .day{
   font-size: 12px;
   margin-left: 8px;
 }
+.event{
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #9fe3ff;
+}
+.event.done{
+  text-decoration: line-through;
+  opacity: .6;
+}
 
 
