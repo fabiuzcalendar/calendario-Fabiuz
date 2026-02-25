@@ -673,7 +673,7 @@ body.night #calendar-app.rotated .side-month .day{
 }
 /* ===== OVERLAY NOTE / LISTA SPESA ===== */
 .notes-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: rgba(0,0,0,0.65);
   display: flex;
@@ -803,5 +803,6 @@ body.rotated #notes-overlay{
   width: 100vh;
   height: 100vw;
 }
+
 
 
