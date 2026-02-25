@@ -9,6 +9,23 @@ const monthNames = [
 const dayNamesFull = ["DOM","LUN","MAR","MER","GIO","VEN","SAB"];
 const dayNamesShort = ["D","L","M","M","G","V","S"];
 
+/******** EVENTI (da GitHub RAW) ********/
+const EVENTS_URL = "https://raw.githubusercontent.com/fabiuzcalendar/calendario-Fabiuz/main/events.json";
+let eventsCache = {}; // { "YYYY-MM-DD": { text: "...", done: true/false } }
+
+async function refreshEvents(){
+  try{
+    const url = EVENTS_URL + "?t=" + Date.now(); // evita cache
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return;
+    const json = await res.json();
+    eventsCache = (json && typeof json === "object") ? json : {};
+    renderAll(); // aggiorna la vista quando arrivano
+  }catch(e){
+    // offline: resta l'ultima cache
+  }
+}
+
 /******** FESTIVITÀ ITALIANE ********/
 
 /* feste fisse (valgono ogni anno) -> mappa MD -> nome */
@@ -154,11 +171,20 @@ function renderCalendar(containerId, titleId, y, m, showBirthdays, isMain) {
       ? `<div class="birthday">${birthdays[md]}</div>`
       : "";
 
+    // EVENTO (solo mese centrale) - BARRATO SOLO SE PASSATO
+    const ev = eventsCache[iso];
+    const isPast = iso < todayIso;
+
+    const eventHTML = (isMain && ev && ev.text)
+      ? `<div class="event ${isPast ? "done" : ""}">${ev.text}</div>`
+      : "";
+
     div.innerHTML = `
       <div class="day-number">${d}</div>
       <div class="day-name">${name}</div>
       ${holidayHTML}
       ${birthdayHTML}
+      ${eventHTML}
     `;
 
     if (isMain) (d <= 15 ? leftCol : rightCol).appendChild(div);
@@ -179,6 +205,10 @@ function resetToToday() {
 
 /******** AUTO ********/
 renderAll();
+
+// EVENTI: refresh subito + ogni 60s
+refreshEvents();
+setInterval(refreshEvents, 60000);
 
 (function midnightReload(){
   const now = new Date();
