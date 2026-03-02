@@ -7,8 +7,8 @@
   --note-size: 18px;
 
   --side-title-size: 19px;
-  --side-daynum-size: 20px;
-  --side-dayname-size: 14px;
+  --side-daynum-size: 22px;
+  --side-dayname-size: 16px;
 
   --red: #c40000;
 }
@@ -352,11 +352,13 @@ body.night #calendar-app.rotated .side-month .day{
 #calendar-app.rotated .side-month .day-number{
   font-size: var(--side-daynum-size);
   width: 34px;
+  font-weight: 800;   /* aggiunto */
 }
 
 #calendar-app.rotated .side-month .day-name{
   font-size: var(--side-dayname-size);
   width: 22px;
+  font-weight: 700;   /* aggiunto */
 }
 
 /* mese centrale più leggibile */
@@ -508,6 +510,7 @@ body.rotated #notes-overlay{
     display: inline-block;
   }
 }
+
 
 
 
