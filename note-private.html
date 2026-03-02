@@ -1,56 +1,176 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Note Private</title>
-  <link rel="stylesheet" href="style.css">
 
   <style>
-    body {
-      padding: 15px;
+    body{margin:0;font-family:system-ui;background:#0b0b0b;color:#fff}
+    .wrap{min-height:100vh;display:grid;place-items:center;padding:16px}
+    .card{width:min(820px,96vw);background:#141414;border:1px solid #2a2a2a;border-radius:18px;padding:16px}
+    h1{margin:0 0 10px 0;font-size:20px}
+    textarea{
+      width:100%;
+      height:65vh;
+      margin-top:8px;
+      border-radius:14px;
+      border:1px solid #2f2f2f;
+      background:#111;
+      color:#fff;
+      padding:12px;
+      font-size:16px;
+      line-height:1.35;
+      outline:none;
+      resize:none;
     }
-
-    textarea {
-      width: 100%;
-      height: 75vh;
-      font-size: 18px;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
+    .row{display:flex;gap:10px;margin-top:12px}
+    .btn{
+      flex:1;padding:14px 12px;border-radius:14px;border:1px solid #2f2f2f;
+      background:#0f0f0f;color:#fff;font-weight:900;font-size:16px
     }
-
-    .top-bar {
-      margin-bottom: 10px;
-    }
-
-    .top-bar button {
-      padding: 10px 14px;
-      font-size: 16px;
-    }
+    .btn:disabled{opacity:.5}
+    .msg{margin-top:10px;color:#aaa;font-weight:800;white-space:pre-wrap}
+    .small{font-size:12px;color:#888;margin-top:10px;line-height:1.35}
   </style>
 </head>
 
 <body>
+  <div class="wrap">
+    <div class="card">
+      <h1>🔒 Note Private</h1>
+      <div class="small">Scrivi come vuoi. Queste note NON sono nella pagina pubblica.</div>
 
-  <div class="top-bar">
-    <button onclick="location.href='menu.html'">⬅ Torna al Menu</button>
+      <textarea id="t" spellcheck="false"
+        placeholder="Scrivi qui le tue note private..."></textarea>
+
+      <div class="row">
+        <button class="btn" id="reload">RICARICA</button>
+        <button class="btn" id="save">SALVA</button>
+      </div>
+
+      <div class="msg" id="m"></div>
+      <div class="small">Il token GitHub viene salvato SOLO su questo telefono.</div>
+    </div>
   </div>
 
-  <textarea id="privateNotes" placeholder="Scrivi qui le tue note private..."></textarea>
+<script>
+/*** CONFIG GH ***/
+const OWNER = "fabiuzcalendar";
+const REPO  = "calendario-Fabiuz";
+const BRANCH = "main";
+const FILE_PATH = "private-notes.txt"; // <-- FILE DIVERSO dalle note pubbliche
 
-  <script>
-    const textarea = document.getElementById("privateNotes");
+/*** TOKEN ***/
+const TOKEN_KEY = "cal_token_v1";
+function getToken(){ return localStorage.getItem(TOKEN_KEY) || ""; }
+function ensureToken(){
+  let t = getToken();
+  if (t) return t;
+  t = prompt("Incolla il token GitHub (salvato SOLO su questo telefono):");
+  if (!t) throw new Error("Token mancante.");
+  localStorage.setItem(TOKEN_KEY, t.trim());
+  return t.trim();
+}
 
-    // Carica note salvate
-    textarea.value = localStorage.getItem("note_private") || "";
+const tEl = document.getElementById("t");
+const mEl = document.getElementById("m");
+const btnReload = document.getElementById("reload");
+const btnSave = document.getElementById("save");
+const msg = (s) => mEl.textContent = s || "";
 
-    // Salvataggio automatico mentre scrivi
-    textarea.addEventListener("input", () => {
-      localStorage.setItem("note_private", textarea.value);
-    });
-  </script>
+async function ghGetText(){
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}?ref=${encodeURIComponent(BRANCH)}&t=${Date.now()}`;
+  const res = await fetch(url, {
+    headers: {
+      "Accept":"application/vnd.github+json",
+      "Authorization": `Bearer ${ensureToken()}`
+    },
+    cache: "no-store"
+  });
 
+  // Se il file non esiste ancora, lo trattiamo come vuoto
+  if (res.status === 404) return { text: "", sha: null };
+
+  if (!res.ok) throw new Error(`GET failed: HTTP ${res.status}`);
+  const data = await res.json();
+  const content = atob((data.content || "").replace(/\n/g,""));
+  return { text: decodeURIComponent(escape(content)), sha: data.sha };
+}
+
+async function ghPutText(text, sha){
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}`;
+  const body = {
+    message: `Update private notes ${new Date().toISOString()}`,
+    content: btoa(unescape(encodeURIComponent(text || ""))),
+    branch: BRANCH
+  };
+  if (sha) body.sha = sha;
+
+  const res = await fetch(url, {
+    method: "PUT",
+    headers: {
+      "Accept":"application/vnd.github+json",
+      "Content-Type":"application/json",
+      "Authorization": `Bearer ${ensureToken()}`
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    const tx = await res.text().catch(()=> "");
+    const err = new Error(`PUT failed: HTTP ${res.status}\n${tx}`);
+    err.status = res.status;
+    throw err;
+  }
+}
+
+async function reload(){
+  msg("Carico...");
+  const { text } = await ghGetText();
+  tEl.value = text || "";
+  msg("✅ Caricato");
+}
+
+async function save(){
+  btnSave.disabled = true;
+  btnReload.disabled = true;
+
+  try{
+    msg("Salvo...");
+
+    // 1) prendo sha aggiornato (o null se file non esiste)
+    let { sha } = await ghGetText();
+
+    // 2) provo PUT
+    try{
+      await ghPutText(tEl.value, sha);
+      msg("✅ Salvato");
+      return;
+    }catch(e){
+      // 409 = sha non match → riprova una volta
+      if (e.status === 409){
+        msg("⚠️ Conflitto (409). Riprovo...");
+        const fresh = await ghGetText();
+        await ghPutText(tEl.value, fresh.sha);
+        msg("✅ Salvato (risolto conflitto)");
+        return;
+      }
+      throw e;
+    }
+
+  }catch(e){
+    msg("❌ " + e.message + "\n\nConsiglio: premi RICARICA e poi SALVA.\nE non tenere note-private.html aperto in 2 schede.");
+  }finally{
+    btnSave.disabled = false;
+    btnReload.disabled = false;
+  }
+}
+
+btnReload.addEventListener("click", ()=>reload().catch(e=>msg("❌ "+e.message)));
+btnSave.addEventListener("click", ()=>save());
+
+reload();
+</script>
 </body>
 </html>
