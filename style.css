@@ -4,11 +4,11 @@
   --title-size: 56px;
   --daynum-size: 46px;
   --dayname-size: 16px;
-  --note-size: 15px;
+  --note-size: 18px;
 
-  --side-title-size: 16px;
-  --side-daynum-size: 16px;
-  --side-dayname-size: 12px;
+  --side-title-size: 17px;
+  --side-daynum-size: 17px;
+  --side-dayname-size: 13px;
 
   --red: #c40000;
 }
@@ -43,7 +43,7 @@ body{
 /******** CALENDARIO (default non-kiosk) ********/
 #calendar{
   display: grid;
-  grid-template-columns: 15% 70% 15%;
+  grid-template-columns: 20% 60% 20%;
   height: calc(100vh - 60px);
   align-items: stretch;
 }
@@ -137,17 +137,22 @@ body{
 .sunday{ color: var(--red); }
 
 .today{
-  background: rgba(196,0,0,0.25);
-  border-left: 10px solid var(--red);
-  padding-left: 10px;
+  background: rgba(255, 230, 230, 0.95);   /* molto chiaro, leggibile */
+  outline: 3px solid rgba(196,0,0,0.75);   /* bordo pulito */
+  outline-offset: -3px;
+  border-left: 0;
+  padding-left: 0;
 }
 
 /******** EVENTI ********/
 .event{
   margin-top: 4px;
-  font-size: 13px;
+  font-size: 18px;          /* NOTE PIÙ GRANDI */
   font-weight: 800;
-  color: #9fe3ff;
+  color: #111;              /* leggibile su bianco e su “oggi” */
+}
+body.night .event{
+  color: #9fe3ff;           /* di notte resta come piace a te */
 }
 .event.done{
   text-decoration: line-through;
@@ -503,6 +508,7 @@ body.rotated #notes-overlay{
     display: inline-block;
   }
 }
+
 
 
 
