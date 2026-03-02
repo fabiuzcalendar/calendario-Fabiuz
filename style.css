@@ -142,6 +142,18 @@ body{
   padding-left: 10px;
 }
 
+/******** EVENTI ********/
+.event{
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #9fe3ff;
+}
+.event.done{
+  text-decoration: line-through;
+  opacity: .6;
+}
+
 /******** NOTTE ********/
 body.night{
   background: #111;
@@ -170,14 +182,37 @@ body.night .side-month .day{
   border-bottom: 1px solid rgba(255,255,255,0.10);
 }
 
-/******** MOBILE ********/
+/******** MOBILE: SOLO MESE CORRENTE ********/
 @media (max-width: 900px){
+
+  /* su telefono niente "pagine" orizzontali */
   #calendar{
-    display: flex;
-    overflow-x: auto;
+    display: grid;
+    grid-template-columns: 1fr;     /* una sola colonna */
+    height: calc(100vh - 60px);
+    overflow-y: auto;              /* se serve scroll verticale */
+    -webkit-overflow-scrolling: touch;
   }
-  .side-month, .main-month{
-    min-width: 100vw;
+
+  /* nascondi mesi laterali */
+  .side-month{
+    display: none;
+  }
+
+  /* il mese centrale prende tutta la larghezza */
+  .main-month{
+    border-left: 0;
+    border-right: 0;
+  }
+
+  /* pulsanti un po' più comodi */
+  .controls{
+    gap: 10px;
+    padding: 10px;
+  }
+  .controls button{
+    font-size: 18px;
+    padding: 10px 12px;
   }
 }
 
@@ -265,13 +300,13 @@ body.night .side-month .day{
 /* rendiamo i due contenitori (1-15) e (16-fine) griglie con righe elastiche */
 #calendar-app.rotated .main-month .month-half{
   display: grid;
-  grid-auto-rows: 1fr;   /* ogni giorno si prende una quota di altezza */
+  grid-auto-rows: 1fr;
   align-content: stretch;
 }
 
 /* ogni riga occupa tutto e la linea di separazione resta "lunga" */
 #calendar-app.rotated .main-month .month-half .day{
-  padding: 0;                     /* lasciamo che sia l’altezza a fare da spaziatura */
+  padding: 0;
   align-items: center;
   border-bottom: 1px solid rgba(255,255,255,0.10);
 }
@@ -294,7 +329,7 @@ body:not(.night) #calendar-app.rotated .main-month .month-half .day{
 #calendar-app.rotated .side-month .days{
   display: grid;
   grid-template-columns: 1fr;
-  grid-auto-rows: 1fr;  /* anche loro “stirano” e riempiono lo spazio */
+  grid-auto-rows: 1fr;
   gap: 2px;
   padding: 4px 0;
 }
@@ -334,343 +369,7 @@ body.night #calendar-app.rotated .side-month .day{
 #debug-orientation, #kiosk-diag{
   display: none !important;
 }
-/* ===== OVERLAY NOTE / LISTA SPESA ===== */
-* { box-sizing: border-box; }
 
-:root{
-  --title-size: 56px;
-  --daynum-size: 46px;
-  --dayname-size: 16px;
-  --note-size: 15px;
-
-  --side-title-size: 14px;
-  --side-daynum-size: 14px;
-  --side-dayname-size: 11px;
-
-  --red: #c40000;
-}
-
-html, body{
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-body{
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f4f4f4;
-  color: #111;
-}
-
-/******** CONTROLLI ********/
-.controls{
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  padding: 10px;
-}
-
-.controls button{
-  font-size: 20px;
-  padding: 8px 16px;
-  cursor: pointer;
-}
-
-/******** CALENDARIO (default non-kiosk) ********/
-#calendar{
-  display: grid;
-  grid-template-columns: 15% 70% 15%;
-  height: calc(100vh - 60px);
-  align-items: stretch;
-}
-
-/******** MESI LATERALI ********/
-.side-month{
-  background: #f1f1f1;
-  padding: 10px;
-}
-
-.side-month .month-header{
-  text-align: center;
-  font-weight: bold;
-  font-size: 20px;
-  color: #000;
-  margin-bottom: 6px;
-}
-
-.side-month .day{
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 4px 0;
-  border-bottom: 1px solid #ddd;
-}
-
-.side-month .day-number{
-  width: 28px;
-  text-align: right;
-  font-weight: bold;
-  font-size: 18px;
-}
-
-.side-month .day-name{
-  font-size: 14px;
-  width: 14px;
-}
-
-/******** MESE CENTRALE ********/
-.main-month{
-  background: #fff;
-  border-left: 4px solid var(--red);
-  border-right: 4px solid var(--red);
-}
-
-.month-header{
-  text-align: center;
-  font-size: var(--title-size);
-  font-weight: bold;
-  color: var(--red);
-  padding: 14px 0;
-  border-bottom: 2px solid var(--red);
-}
-
-.days{
-  display: grid;
-  grid-template-columns: 1fr 1fr; /* 1-15 / 16-fine */
-  padding: 12px 28px;
-  gap: 24px;
-}
-
-.month-half .day{
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 7px 0;
-  border-bottom: 1px solid #ddd;
-}
-
-.day-number{
-  font-size: var(--daynum-size);
-  font-weight: bold;
-  width: 62px;
-  text-align: right;
-}
-
-.day-name{
-  font-weight: bold;
-  width: 46px;
-  font-size: var(--dayname-size);
-}
-
-.holiday,
-.birthday{
-  font-size: var(--note-size);
-  font-style: italic;
-  opacity: 0.9;
-}
-
-/******** STATI ********/
-.sunday{ color: var(--red); }
-
-.today{
-  background: rgba(196,0,0,0.25);
-  border-left: 10px solid var(--red);
-  padding-left: 10px;
-}
-
-/******** NOTTE ********/
-body.night{
-  background: #111;
-  color: #eee;
-}
-
-body.night .main-month{
-  background: #1a1a1a;
-  border-color: #660000;
-}
-
-body.night .month-header{
-  color: #ff6b6b;
-  border-color: #660000;
-}
-
-body.night .side-month{
-  background: #1e1e1e;
-}
-
-body.night .month-half .day{
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-}
-
-body.night .side-month .day{
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-}
-
-/******** MOBILE ********/
-@media (max-width: 900px){
-  #calendar{
-    display: flex;
-    overflow-x: auto;
-  }
-  .side-month, .main-month{
-    min-width: 100vw;
-  }
-}
-
-/* ================================
-   KIOSK ROOT + ROTAZIONE
-   ================================ */
-
-#kiosk-root{
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  background: inherit;
-}
-
-#calendar-app{
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform-origin: center center;
-}
-
-/* stato normale */
-#calendar-app.normal{
-  transform: translate(-50%, -50%);
-  width: 100vw;
-  height: 100vh;
-}
-
-/* stato ruotato */
-#calendar-app.rotated{
-  transform: translate(-50%, -50%) rotate(90deg);
-  width: 100vh;
-  height: 100vw;
-
-  display: flex;
-  flex-direction: column;
-}
-
-/* controls sopra */
-#calendar-app.rotated .controls{
-  flex: 0 0 auto;
-  padding: 8px;
-}
-
-/* calendario deve riempire tutta l'altezza restante */
-#calendar-app.rotated #calendar{
-  flex: 1 1 auto;
-  height: 100% !important;
-  min-height: 0;
-  width: 100%;
-  max-width: 100%;
-
-  /* centrale enorme, laterali stretti */
-  grid-template-columns: 7% 86% 7%;
-  align-items: stretch;
-}
-
-/* ====== FIX CHIAVE: tutte le 3 colonne devono allungarsi fino in fondo ====== */
-#calendar-app.rotated .side-month,
-#calendar-app.rotated .main-month{
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-/* header fisso, lista giorni prende tutto lo spazio */
-#calendar-app.rotated .side-month .month-header,
-#calendar-app.rotated .main-month .month-header{
-  flex: 0 0 auto;
-}
-
-#calendar-app.rotated .side-month .days,
-#calendar-app.rotated .main-month .days{
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-/* ====== FIX CHIAVE: il mese centrale deve "stirare" le righe e riempire ====== */
-#calendar-app.rotated .main-month .days{
-  padding: 12px 34px;
-  gap: 26px;
-}
-
-/* rendiamo i due contenitori (1-15) e (16-fine) griglie con righe elastiche */
-#calendar-app.rotated .main-month .month-half{
-  display: grid;
-  grid-auto-rows: 1fr;   /* ogni giorno si prende una quota di altezza */
-  align-content: stretch;
-}
-
-/* ogni riga occupa tutto e la linea di separazione resta "lunga" */
-#calendar-app.rotated .main-month .month-half .day{
-  padding: 0;                     /* lasciamo che sia l’altezza a fare da spaziatura */
-  align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-}
-
-/* in tema chiaro, riga più visibile */
-body:not(.night) #calendar-app.rotated .main-month .month-half .day{
-  border-bottom: 1px solid rgba(0,0,0,0.12);
-}
-
-/* laterali: verticali compatti ma pieni fino in fondo */
-#calendar-app.rotated .side-month{
-  padding: 6px 4px;
-}
-
-#calendar-app.rotated .side-month .month-header{
-  font-size: var(--side-title-size);
-  margin-bottom: 4px;
-}
-
-#calendar-app.rotated .side-month .days{
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-auto-rows: 1fr;  /* anche loro “stirano” e riempiono lo spazio */
-  gap: 2px;
-  padding: 4px 0;
-}
-
-#calendar-app.rotated .side-month .day{
-  gap: 6px;
-  padding: 0;
-  border-bottom: 1px solid rgba(0,0,0,0.12);
-}
-
-body.night #calendar-app.rotated .side-month .day{
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-}
-
-#calendar-app.rotated .side-month .day-number{
-  font-size: var(--side-daynum-size);
-  width: 22px;
-}
-
-#calendar-app.rotated .side-month .day-name{
-  font-size: var(--side-dayname-size);
-  width: 12px;
-}
-
-/* mese centrale più leggibile */
-#calendar-app.rotated .month-header{
-  font-size: 56px;
-  padding: 10px 0;
-}
-
-#calendar-app.rotated .day-number{
-  font-size: 46px;
-  width: 62px;
-}
-
-/* Nasconde eventuali overlay debug */
-#debug-orientation, #kiosk-diag{
-  display: none !important;
-}
 /* ===== OVERLAY NOTE / LISTA SPESA ===== */
 .notes-overlay {
   position: absolute;
@@ -783,16 +482,7 @@ body.night #calendar-app.rotated .side-month .day{
   font-size: 12px;
   margin-left: 8px;
 }
-.event{
-  margin-top: 4px;
-  font-size: 13px;
-  font-weight: 800;
-  color: #9fe3ff;
-}
-.event.done{
-  text-decoration: line-through;
-  opacity: .6;
-}
+
 /* FIX OVERLAY NOTE quando calendario è ruotato */
 #calendar-app.rotated ~ #notes-overlay,
 #calendar-app.rotated + #notes-overlay,
@@ -803,7 +493,6 @@ body.rotated #notes-overlay{
   width: 100vh;
   height: 100vw;
 }
-
 
 
 
