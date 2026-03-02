@@ -297,8 +297,19 @@ function stopFastNotesRefresh(){
 })();
 
 (function nightMode(){
-  const h = new Date().getHours();
-  if (h >= 21 || h < 7) document.body.classList.add("night");
+  function applyNightMode(){
+    const now = new Date();
+    const minutesNow = now.getHours() * 60 + now.getMinutes();
+
+    const nightStart = 21 * 60;       // 21:00
+    const nightEnd   = 6 * 60 + 30;   // 06:30
+
+    const isNight = (minutesNow >= nightStart) || (minutesNow < nightEnd);
+    document.body.classList.toggle("night", isNight);
+  }
+
+  applyNightMode();                 // subito
+  setInterval(applyNightMode, 60000); // ogni 1 minuto
 })();
 
 /******** TASTIERA ********/
@@ -391,6 +402,7 @@ function stopFastNotesRefresh(){
   window.addEventListener("resize", applyAll);
   applyAll();
 })();
+
 
 
 
