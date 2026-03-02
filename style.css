@@ -493,6 +493,16 @@ body.rotated #notes-overlay{
   width: 100vh;
   height: 100vw;
 }
+/* Pulsanti solo mobile */
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: inline-block;
+  }
+}
 
 
 
