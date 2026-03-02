@@ -186,20 +186,19 @@ body.night .month-half .day{
 body.night .side-month .day{
   border-bottom: 1px solid rgba(255,255,255,0.10);
 }
-/* ===== TODAY in modalità NOTTE: leggibile ===== */
+
+/* ===== TODAY in modalità NOTTE (tutte le versioni: mobile + schermo) ===== */
 body.night .today{
-  background: rgba(255, 255, 255, 0.08);  /* leggero chiaro, non rosso pieno */
-  outline: 3px solid rgba(255, 107, 107, 0.85); /* bordo rosso “night” */
+  background: rgba(255, 255, 255, 0.08);
+  outline: 3px solid rgba(255, 107, 107, 0.85);
   outline-offset: -3px;
 }
 
-/* testo dentro al giorno di oggi più chiaro */
 body.night .today .day-number,
 body.night .today .day-name{
-  color: #fff;
+  color: #ffffff;
 }
 
-/* eventi/notes dentro oggi: più contrasto */
 body.night .today .event{
   color: #ffffff;
 }
@@ -547,6 +546,7 @@ body.rotated #notes-overlay{
     display: inline-block;
   }
 }
+
 
 
 
