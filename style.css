@@ -6,9 +6,9 @@
   --dayname-size: 16px;
   --note-size: 18px;
 
-  --side-title-size: 17px;
-  --side-daynum-size: 17px;
-  --side-dayname-size: 13px;
+  --side-title-size: 19px;
+  --side-daynum-size: 20px;
+  --side-dayname-size: 14px;
 
   --red: #c40000;
 }
@@ -271,7 +271,7 @@ body.night .side-month .day{
   max-width: 100%;
 
   /* centrale enorme, laterali stretti */
-  grid-template-columns: 10% 80% 10%;
+  grid-template-columns: 13% 74% 13%;
   align-items: stretch;
 }
 
@@ -340,8 +340,8 @@ body:not(.night) #calendar-app.rotated .main-month .month-half .day{
 }
 
 #calendar-app.rotated .side-month .day{
-  gap: 6px;
-  padding: 0;
+  gap: 10px;        /* più aria tra numero e giorno */
+  padding: 2px 0;   /* righe un po’ più “alte” */
   border-bottom: 1px solid rgba(0,0,0,0.12);
 }
 
@@ -351,12 +351,12 @@ body.night #calendar-app.rotated .side-month .day{
 
 #calendar-app.rotated .side-month .day-number{
   font-size: var(--side-daynum-size);
-  width: 26px;
+  width: 34px;
 }
 
 #calendar-app.rotated .side-month .day-name{
   font-size: var(--side-dayname-size);
-  width: 16px;
+  width: 22px;
 }
 
 /* mese centrale più leggibile */
@@ -508,6 +508,7 @@ body.rotated #notes-overlay{
     display: inline-block;
   }
 }
+
 
 
 
