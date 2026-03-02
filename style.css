@@ -212,13 +212,16 @@ body.night .side-month .day{
 
   /* pulsanti un po' più comodi */
   .controls{
-    gap: 10px;
-    padding: 10px;
-  }
+  gap: 10px;
+  padding: 25px 10px 10px 10px;  /* più spazio sopra */
+}
   .controls button{
     font-size: 18px;
     padding: 10px 12px;
   }
+  .main-month .month-header{
+  font-size: 32px;
+}
 }
 
 /* ================================
@@ -258,8 +261,7 @@ body.night .side-month .day{
 
 /* controls sopra */
 #calendar-app.rotated .controls{
-  flex: 0 0 auto;
-  padding: 8px;
+  display: none;
 }
 
 /* calendario deve riempire tutta l'altezza restante */
@@ -324,6 +326,24 @@ body:not(.night) #calendar-app.rotated .main-month .month-half .day{
 /* laterali: verticali compatti ma pieni fino in fondo */
 #calendar-app.rotated .side-month{
   padding: 10px 6px;
+}
+
+/* =========================
+   OFFSET LATERALI (RUOTATO)
+   - sinistra: mese precedente
+   - destra: mese successivo
+   ========================= */
+
+/* colonna SINISTRA: allontana dal bordo esterno (sinistro) */
+#calendar-app.rotated #calendar > .side-month:first-child{
+  padding-left: 14px;   /* aumenta/diminuisci di 2px se vuoi */
+  padding-right: 8px;
+}
+
+/* colonna DESTRA: allontana dal bordo esterno (destro) */
+#calendar-app.rotated #calendar > .side-month:last-child{
+  padding-right: 14px;  /* aumenta/diminuisci di 2px se vuoi */
+  padding-left: 8px;
 }
 
 #calendar-app.rotated .side-month .month-header{
@@ -510,6 +530,7 @@ body.rotated #notes-overlay{
     display: inline-block;
   }
 }
+
 
 
 
