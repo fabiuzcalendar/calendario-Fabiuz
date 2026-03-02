@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Note Private</title>
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    body {
+      padding: 15px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 75vh;
+      font-size: 18px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    .top-bar {
+      margin-bottom: 10px;
+    }
+
+    .top-bar button {
+      padding: 10px 14px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="top-bar">
+    <button onclick="location.href='menu.html'">⬅ Torna al Menu</button>
+  </div>
+
+  <textarea id="privateNotes" placeholder="Scrivi qui le tue note private..."></textarea>
+
+  <script>
+    const textarea = document.getElementById("privateNotes");
+
+    // Carica note salvate
+    textarea.value = localStorage.getItem("note_private") || "";
+
+    // Salvataggio automatico mentre scrivi
+    textarea.addEventListener("input", () => {
+      localStorage.setItem("note_private", textarea.value);
+    });
+  </script>
+
+</body>
+</html>
