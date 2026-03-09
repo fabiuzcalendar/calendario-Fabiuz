@@ -22,6 +22,40 @@
     }
     .msg{margin-top:10px;color:#aaa;font-weight:800;white-space:pre-wrap}
     .small{font-size:12px;color:#888;margin-top:10px;line-height:1.35}
+
+    .list-wrap{
+      margin-top:14px;
+      border:1px solid #2f2f2f;
+      border-radius:14px;
+      background:#111;
+      padding:10px;
+    }
+    .list-title{
+      font-size:13px;
+      font-weight:800;
+      color:#aaa;
+      margin-bottom:8px;
+    }
+    .event-list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .event-item{
+      padding:10px 12px;
+      border-radius:10px;
+      background:rgba(255,255,255,0.06);
+      font-size:16px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .event-item:hover{
+      background:rgba(255,255,255,0.10);
+    }
+    .empty{
+      color:#777;
+      font-size:14px;
+    }
   </style>
 </head>
 <body>
@@ -37,6 +71,11 @@
 
       <div class="row">
         <button class="btn" id="save">SALVA</button>
+      </div>
+
+      <div class="list-wrap">
+        <div class="list-title">Eventi del giorno selezionato (tocca una riga per eliminarla)</div>
+        <div id="event-list" class="event-list"></div>
       </div>
 
       <div class="msg" id="msg"></div>
@@ -73,6 +112,22 @@ function isoToday(){
   return `${y}-${m}-${day}`;
 }
 
+function normalizeEventsJson(json){
+  const out = {};
+  if (!json || typeof json !== "object") return out;
+
+  for (const [date, value] of Object.entries(json)) {
+    if (Array.isArray(value)) {
+      out[date] = value.filter(v => typeof v === "string" && v.trim()).map(v => v.trim());
+    } else if (value && typeof value === "object" && typeof value.text === "string") {
+      out[date] = [value.text.trim()].filter(Boolean);
+    } else if (typeof value === "string" && value.trim()) {
+      out[date] = [value.trim()];
+    }
+  }
+  return out;
+}
+
 async function ghGetJson(){
   const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}?ref=${encodeURIComponent(BRANCH)}`;
   const res = await fetch(url, {
@@ -84,7 +139,8 @@ async function ghGetJson(){
   if (!res.ok) throw new Error(`GET failed: HTTP ${res.status}`);
   const data = await res.json();
   const content = atob((data.content || "").replace(/\n/g,""));
-  return { json: JSON.parse(content || "{}"), sha: data.sha };
+  const parsed = JSON.parse(content || "{}");
+  return { json: normalizeEventsJson(parsed), sha: data.sha };
 }
 
 async function ghPutJson(newObj, sha){
@@ -113,6 +169,37 @@ async function ghPutJson(newObj, sha){
   return await res.json();
 }
 
+async function renderEventList(){
+  const date = $("date").value;
+  const list = $("event-list");
+  if (!date) {
+    list.innerHTML = `<div class="empty">Seleziona una data.</div>`;
+    return;
+  }
+
+  try{
+    const { json } = await ghGetJson();
+    const items = json[date] || [];
+
+    list.innerHTML = "";
+    if (!items.length) {
+      list.innerHTML = `<div class="empty">Nessun evento per questa data.</div>`;
+      return;
+    }
+
+    items.forEach((text, idx) => {
+      const div = document.createElement("div");
+      div.className = "event-item";
+      div.textContent = text;
+      div.title = "Tocca per eliminare";
+      div.addEventListener("click", () => deleteEventAt(date, idx));
+      list.appendChild(div);
+    });
+  }catch(e){
+    list.innerHTML = `<div class="empty">Errore nel caricamento.</div>`;
+  }
+}
+
 async function saveEvent(){
   const date = $("date").value;
   const text = $("text").value.trim();
@@ -123,16 +210,45 @@ async function saveEvent(){
   msg("Salvo...");
   const { json, sha } = await ghGetJson();
 
-  json[date] = { text };
+  if (!Array.isArray(json[date])) json[date] = [];
+  json[date].push(text);
 
   await ghPutJson(json, sha);
 
   msg("✅ Salvato");
   $("text").value = "";
+  await renderEventList();
+}
+
+async function deleteEventAt(date, idx){
+  try{
+    msg("Elimino...");
+    const { json, sha } = await ghGetJson();
+
+    if (!Array.isArray(json[date])) {
+      msg("⚠️ Nessun evento da eliminare.");
+      return;
+    }
+
+    json[date].splice(idx, 1);
+
+    if (json[date].length === 0) {
+      delete json[date];
+    }
+
+    await ghPutJson(json, sha);
+    msg("✅ Eliminato");
+    await renderEventList();
+  }catch(e){
+    msg("❌ " + e.message);
+  }
 }
 
 $("date").value = isoToday();
 $("save").addEventListener("click", () => saveEvent().catch(e=>msg("❌ "+e.message)));
+$("date").addEventListener("change", () => renderEventList());
+
+renderEventList();
 </script>
 </body>
 </html>
