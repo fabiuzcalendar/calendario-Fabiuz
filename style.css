@@ -209,9 +209,11 @@ body.night .today .event{
   /* su telefono niente "pagine" orizzontali */
   #calendar{
     display: grid;
-    grid-template-columns: 1fr;     /* una sola colonna */
-    height: calc(100vh - 60px);
-    overflow-y: auto;              /* se serve scroll verticale */
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: calc(100vh - 60px);
+    overflow-y: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -226,18 +228,67 @@ body.night .today .event{
     border-right: 0;
   }
 
-  /* pulsanti un po' più comodi */
+  /* pulsanti */
   .controls{
-  gap: 10px;
-  padding: 25px 10px 10px 10px;  /* più spazio sopra */
-}
-  .controls button{
-    font-size: 18px;
-    padding: 10px 12px;
+    gap: 8px;
+    padding: 18px 8px 8px 8px;
   }
+
+  .controls button{
+    font-size: 16px;
+    padding: 8px 10px;
+  }
+
+  /* titolo mese più compatto */
   .main-month .month-header{
-  font-size: 32px;
-}
+    font-size: 28px;
+    padding: 8px 0;
+  }
+
+  /* contenitore giorni più stretto */
+  .days{
+    padding: 8px 12px;
+    gap: 12px;
+  }
+
+  /* righe del mese più compatte */
+  .month-half .day{
+    gap: 8px;
+    padding: 4px 0;
+  }
+
+  /* numero giorno */
+  .day-number{
+    font-size: 34px;
+    width: 44px;
+  }
+
+  /* nome giorno */
+  .day-name{
+    font-size: 13px;
+    width: 34px;
+  }
+
+  /* festività e compleanni */
+  .holiday,
+  .birthday{
+    font-size: 14px;
+  }
+
+  /* eventi/note */
+  .event{
+    font-size: 14px;
+    margin-top: 2px;
+  }
+
+  /* giorno corrente più compatto */
+  .today{
+    outline-width: 2px;
+  }
+
+  body.night .today{
+    outline-width: 2px;
+  }
 }
 
 /* ================================
@@ -546,6 +597,7 @@ body.rotated #notes-overlay{
     display: inline-block;
   }
 }
+
 
 
 
