@@ -20,6 +20,15 @@
       flex:1;padding:14px 12px;border-radius:14px;border:1px solid #2f2f2f;
       background:#0f0f0f;color:#fff;font-weight:900;font-size:16px
     }
+    .btn.secondary{
+      background:#1a1a1a;
+      color:#ddd;
+    }
+    .btn.danger{
+      background:#2a1010;
+      border-color:#5a2222;
+      color:#ffb3b3;
+    }
     .msg{margin-top:10px;color:#aaa;font-weight:800;white-space:pre-wrap}
     .small{font-size:12px;color:#888;margin-top:10px;line-height:1.35}
 
@@ -48,20 +57,41 @@
       font-size:16px;
       cursor:pointer;
       user-select:none;
+      border:1px solid transparent;
     }
     .event-item:hover{
       background:rgba(255,255,255,0.10);
     }
+    .event-item.active{
+      border-color:#7bbcff;
+      background:rgba(123,188,255,0.12);
+    }
     .empty{
       color:#777;
       font-size:14px;
+    }
+    .edit-box{
+      margin-top:12px;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid #2f2f2f;
+      background:#101010;
+    }
+    .edit-title{
+      font-size:13px;
+      font-weight:800;
+      color:#aaa;
+      margin-bottom:8px;
+    }
+    .hidden{
+      display:none;
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <h1>➕ Aggiungi evento</h1>
+      <h1>➕ Aggiungi / Modifica evento</h1>
 
       <label>Data</label>
       <input id="date" type="date" />
@@ -70,11 +100,20 @@
       <textarea id="text" spellcheck="false" placeholder="Es: Dentista 15:30"></textarea>
 
       <div class="row">
-        <button class="btn" id="save">SALVA</button>
+        <button class="btn" id="save">SALVA NUOVO</button>
+      </div>
+
+      <div id="edit-box" class="edit-box hidden">
+        <div class="edit-title">Stai modificando un evento esistente</div>
+        <div class="row">
+          <button class="btn" id="update">SALVA MODIFICA</button>
+          <button class="btn danger" id="delete">ELIMINA</button>
+          <button class="btn secondary" id="cancel">ANNULLA</button>
+        </div>
       </div>
 
       <div class="list-wrap">
-        <div class="list-title">Eventi del giorno selezionato (tocca una riga per eliminarla)</div>
+        <div class="list-title">Eventi del giorno selezionato (tocca una riga per modificarla)</div>
         <div id="event-list" class="event-list"></div>
       </div>
 
@@ -103,6 +142,8 @@ function ensureToken(){
 
 const $ = (id) => document.getElementById(id);
 const msg = (s) => { $("msg").textContent = s || ""; };
+
+let selectedEventIndex = null;
 
 function isoToday(){
   const d = new Date();
@@ -169,11 +210,31 @@ async function ghPutJson(newObj, sha){
   return await res.json();
 }
 
+function enterEditMode(index, text){
+  selectedEventIndex = index;
+  $("text").value = text;
+  $("edit-box").classList.remove("hidden");
+}
+
+function exitEditMode(){
+  selectedEventIndex = null;
+  $("edit-box").classList.add("hidden");
+  $("text").value = "";
+  clearActiveRows();
+}
+
+function clearActiveRows(){
+  document.querySelectorAll(".event-item.active").forEach(el => {
+    el.classList.remove("active");
+  });
+}
+
 async function renderEventList(){
   const date = $("date").value;
   const list = $("event-list");
   if (!date) {
     list.innerHTML = `<div class="empty">Seleziona una data.</div>`;
+    exitEditMode();
     return;
   }
 
@@ -184,15 +245,21 @@ async function renderEventList(){
     list.innerHTML = "";
     if (!items.length) {
       list.innerHTML = `<div class="empty">Nessun evento per questa data.</div>`;
+      exitEditMode();
       return;
     }
 
     items.forEach((text, idx) => {
       const div = document.createElement("div");
       div.className = "event-item";
+      if (selectedEventIndex === idx) div.classList.add("active");
       div.textContent = text;
-      div.title = "Tocca per eliminare";
-      div.addEventListener("click", () => deleteEventAt(date, idx));
+      div.title = "Tocca per modificare";
+      div.addEventListener("click", () => {
+        clearActiveRows();
+        div.classList.add("active");
+        enterEditMode(idx, text);
+      });
       list.appendChild(div);
     });
   }catch(e){
@@ -215,38 +282,79 @@ async function saveEvent(){
 
   await ghPutJson(json, sha);
 
-  msg("✅ Salvato");
+  msg("✅ Nuovo evento salvato");
   $("text").value = "";
+  exitEditMode();
   await renderEventList();
 }
 
-async function deleteEventAt(date, idx){
-  try{
-    msg("Elimino...");
-    const { json, sha } = await ghGetJson();
+async function updateEvent(){
+  const date = $("date").value;
+  const text = $("text").value.trim();
 
-    if (!Array.isArray(json[date])) {
-      msg("⚠️ Nessun evento da eliminare.");
-      return;
-    }
+  if (!date) return msg("⚠️ Scegli una data.");
+  if (selectedEventIndex === null) return msg("⚠️ Seleziona un evento da modificare.");
+  if (!text) return msg("⚠️ Scrivi una nota.");
 
-    json[date].splice(idx, 1);
+  msg("Aggiorno...");
+  const { json, sha } = await ghGetJson();
 
-    if (json[date].length === 0) {
-      delete json[date];
-    }
-
-    await ghPutJson(json, sha);
-    msg("✅ Eliminato");
-    await renderEventList();
-  }catch(e){
-    msg("❌ " + e.message);
+  if (!Array.isArray(json[date]) || !json[date][selectedEventIndex]) {
+    msg("⚠️ Evento non trovato.");
+    return;
   }
+
+  json[date][selectedEventIndex] = text;
+
+  await ghPutJson(json, sha);
+
+  msg("✅ Evento modificato");
+  $("text").value = "";
+  exitEditMode();
+  await renderEventList();
+}
+
+async function deleteEvent(){
+  const date = $("date").value;
+
+  if (!date) return msg("⚠️ Scegli una data.");
+  if (selectedEventIndex === null) return msg("⚠️ Seleziona un evento da eliminare.");
+
+  msg("Elimino...");
+  const { json, sha } = await ghGetJson();
+
+  if (!Array.isArray(json[date]) || !json[date][selectedEventIndex]) {
+    msg("⚠️ Evento non trovato.");
+    return;
+  }
+
+  json[date].splice(selectedEventIndex, 1);
+
+  if (json[date].length === 0) {
+    delete json[date];
+  }
+
+  await ghPutJson(json, sha);
+
+  msg("✅ Evento eliminato");
+  $("text").value = "";
+  exitEditMode();
+  await renderEventList();
 }
 
 $("date").value = isoToday();
 $("save").addEventListener("click", () => saveEvent().catch(e=>msg("❌ "+e.message)));
-$("date").addEventListener("change", () => renderEventList());
+$("update").addEventListener("click", () => updateEvent().catch(e=>msg("❌ "+e.message)));
+$("delete").addEventListener("click", () => deleteEvent().catch(e=>msg("❌ "+e.message)));
+$("cancel").addEventListener("click", () => {
+  msg("");
+  exitEditMode();
+});
+$("date").addEventListener("change", async () => {
+  msg("");
+  exitEditMode();
+  await renderEventList();
+});
 
 renderEventList();
 </script>
