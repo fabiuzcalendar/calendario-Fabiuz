@@ -1,3 +1,5 @@
+
+
 const today = new Date();
 let currentDate = new Date(today);
 
@@ -13,13 +15,29 @@ const dayNamesShort = ["D","L","M","M","G","V","S"];
 const EVENTS_URL = "https://raw.githubusercontent.com/fabiuzcalendar/calendario-Fabiuz/main/events.json";
 let eventsCache = {};
 
+function normalizeEventsCache(json){
+  const out = {};
+  if (!json || typeof json !== "object") return out;
+
+  for (const [date, value] of Object.entries(json)) {
+    if (Array.isArray(value)) {
+      out[date] = value.filter(v => typeof v === "string" && v.trim()).map(v => v.trim());
+    } else if (value && typeof value === "object" && typeof value.text === "string") {
+      out[date] = [value.text.trim()].filter(Boolean);
+    } else if (typeof value === "string" && value.trim()) {
+      out[date] = [value.trim()];
+    }
+  }
+  return out;
+}
+
 async function refreshEvents(){
   try{
     const url = EVENTS_URL + "?t=" + Date.now();
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return;
     const json = await res.json();
-    eventsCache = (json && typeof json === "object") ? json : {};
+    eventsCache = normalizeEventsCache(json);
     renderAll();
   }catch(e){}
 }
@@ -178,11 +196,11 @@ function renderCalendar(containerId, titleId, y, m, showBirthdays, isMain){
       ? `<div class="birthday">${birthdays[md]}</div>`
       : "";
 
-    const ev = eventsCache[iso];
+    const dayEvents = eventsCache[iso] || [];
     const isPast = iso < todayIso;
 
-    const eventHTML = (isMain && ev && ev.text)
-      ? `<div class="event ${isPast ? "done" : ""}">${ev.text}</div>`
+    const eventHTML = (isMain && dayEvents.length)
+      ? dayEvents.map(text => `<div class="event ${isPast ? "done" : ""}">${text}</div>`).join("")
       : "";
 
     div.innerHTML = `
@@ -232,6 +250,7 @@ function openNotes(){
   renderNotesOverlay();
   refreshNotes().then(() => renderNotesOverlay());
 
+  startFastNotesRefresh();
   resetNotesTimer();
 }
 
@@ -246,6 +265,7 @@ function closeNotes(){
   if (notesTimer) clearTimeout(notesTimer);
   notesTimer = null;
 
+  stopFastNotesRefresh();
   resetToToday();
 }
 
@@ -273,15 +293,14 @@ refreshEvents();
 setInterval(refreshEvents, 30000);
 
 refreshNotes();
-setInterval(refreshNotes, 10000); // ogni 10s
+setInterval(refreshNotes, 10000);
 
-// mentre le note sono aperte: refresh super rapido
 let notesFastTimer = null;
 function startFastNotesRefresh(){
   if (notesFastTimer) return;
   notesFastTimer = setInterval(() => {
     refreshNotes().then(renderNotesOverlay);
-  }, 2000); // ogni 2s
+  }, 2000);
 }
 function stopFastNotesRefresh(){
   if (!notesFastTimer) return;
@@ -301,15 +320,15 @@ function stopFastNotesRefresh(){
     const now = new Date();
     const minutesNow = now.getHours() * 60 + now.getMinutes();
 
-    const nightStart = 21 * 60;       // 21:00
-    const nightEnd   = 6 * 60 + 30;   // 06:30
+    const nightStart = 21 * 60;
+    const nightEnd   = 6 * 60 + 30;
 
     const isNight = (minutesNow >= nightStart) || (minutesNow < nightEnd);
     document.body.classList.toggle("night", isNight);
   }
 
-  applyNightMode();                 // subito
-  setInterval(applyNightMode, 60000); // ogni 1 minuto
+  applyNightMode();
+  setInterval(applyNightMode, 60000);
 })();
 
 /******** TASTIERA ********/
@@ -363,6 +382,7 @@ function stopFastNotesRefresh(){
     }
   }, { passive:false });
 })();
+
 /******** KIOSK ROTATION + FILL ********/
 (function kioskRotateAndFill(){
   const app = document.getElementById("calendar-app");
@@ -402,7 +422,4 @@ function stopFastNotesRefresh(){
   window.addEventListener("resize", applyAll);
   applyAll();
 })();
-
-
-
 
