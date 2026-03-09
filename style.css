@@ -206,29 +206,30 @@ body.night .today .event{
 /******** MOBILE: SOLO MESE CORRENTE ********/
 @media (max-width: 900px){
 
-  /* su telefono niente "pagine" orizzontali */
+  /* calendario principale */
   #calendar{
     display: grid;
     grid-template-columns: 1fr;
     height: auto;
-    min-height: calc(100vh - 60px);
+    min-height: 100dvh;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* nascondi mesi laterali */
+  /* nasconde i mesi laterali */
   .side-month{
     display: none;
   }
 
-  /* il mese centrale prende tutta la larghezza */
+  /* mese centrale */
   .main-month{
     border-left: 0;
     border-right: 0;
+    min-height: auto;
   }
 
-  /* pulsanti */
+  /* controlli */
   .controls{
     gap: 8px;
     padding: 18px 8px 8px 8px;
@@ -239,19 +240,25 @@ body.night .today .event{
     padding: 8px 10px;
   }
 
-  /* titolo mese più compatto */
+  /* titolo mese */
   .main-month .month-header{
     font-size: 28px;
     padding: 8px 0;
   }
 
-  /* contenitore giorni più stretto */
+  /* contenitore giorni */
   .days{
     padding: 8px 12px;
     gap: 12px;
+    align-items: start;
   }
 
-  /* righe del mese più compatte */
+  /* colonne giorni */
+  .month-half{
+    min-height: 0;
+  }
+
+  /* righe giorni */
   .month-half .day{
     gap: 8px;
     padding: 4px 0;
@@ -275,13 +282,13 @@ body.night .today .event{
     font-size: 14px;
   }
 
-  /* eventi/note */
+  /* eventi */
   .event{
     font-size: 14px;
     margin-top: 2px;
   }
 
-  /* giorno corrente più compatto */
+  /* giorno corrente */
   .today{
     outline-width: 2px;
   }
@@ -290,7 +297,6 @@ body.night .today .event{
     outline-width: 2px;
   }
 }
-
 /* ================================
    KIOSK ROOT + ROTAZIONE
    ================================ */
@@ -597,6 +603,7 @@ body.rotated #notes-overlay{
     display: inline-block;
   }
 }
+
 
 
 
