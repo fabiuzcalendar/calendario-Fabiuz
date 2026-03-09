@@ -211,12 +211,12 @@ body.night .today .event{
     overflow-y: auto;
   }
 
-  /* su telefono niente mesi laterali */
+  /* nasconde mesi laterali */
   .side-month{
     display: none !important;
   }
 
-  /* il calendario resta dentro il suo contenitore */
+  /* contenitore calendario */
   #calendar{
     display: block;
     height: auto !important;
@@ -253,13 +253,10 @@ body.night .today .event{
     padding: 10px 0;
   }
 
-  /* due colonne 1-15 / 16-fine */
+  /* UNA SOLA COLONNA */
   .days{
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: block;
     padding: 10px 12px 24px 12px;
-    gap: 14px;
-    align-items: start;
   }
 
   .month-half{
@@ -268,7 +265,7 @@ body.night .today .event{
 
   .month-half .day{
     gap: 8px;
-    padding: 4px 0;
+    padding: 6px 0;
   }
 
   .day-number{
@@ -299,7 +296,7 @@ body.night .today .event{
     outline-width: 2px;
   }
 
-  /* su mobile niente rotazione kiosk */
+  /* niente rotazione kiosk su telefono */
   #calendar-app.rotated{
     transform: translate(-50%, -50%) !important;
     width: 100vw !important;
@@ -625,6 +622,7 @@ body.rotated #notes-overlay{
     display: inline-block;
   }
 }
+
 
 
 
