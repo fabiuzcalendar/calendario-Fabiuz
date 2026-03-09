@@ -207,67 +207,39 @@ body.night .today .event{
 @media (max-width: 900px){
 
   html, body{
-    height: auto;
-    min-height: 100%;
     overflow-x: hidden;
     overflow-y: auto;
   }
 
-  #kiosk-root{
-    position: static;
-    inset: auto;
-    overflow: visible;
-  }
-
-  #calendar-app{
-    position: static;
-    top: auto;
-    left: auto;
-    transform: none !important;
-    width: 100%;
-    height: auto;
-  }
-
-  #calendar-app.normal,
-  #calendar-app.rotated{
-    transform: none !important;
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-
-  /* su telefono i controlli restano visibili */
-  #calendar-app.rotated .controls{
-    display: flex;
-  }
-
-  #calendar{
-    display: grid;
-    grid-template-columns: 1fr;
-    height: auto !important;
-    min-height: auto;
-    overflow: visible;
-  }
-
-  /* nasconde mesi laterali */
+  /* su telefono niente mesi laterali */
   .side-month{
-    display: none;
+    display: none !important;
+  }
+
+  /* il calendario resta dentro il suo contenitore */
+  #calendar{
+    display: block;
+    height: auto !important;
+    min-height: 0;
+    overflow: visible !important;
   }
 
   .main-month{
+    display: block;
+    width: 100%;
     border-left: 0;
     border-right: 0;
     min-height: auto;
     height: auto;
   }
 
+  /* controlli telefono */
   .controls{
+    display: flex;
+    justify-content: center;
     gap: 8px;
     padding: 18px 8px 10px 8px;
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    background: inherit;
+    flex-wrap: nowrap;
   }
 
   .controls button{
@@ -275,11 +247,13 @@ body.night .today .event{
     padding: 8px 10px;
   }
 
+  /* titolo mese */
   .main-month .month-header{
-    font-size: 34px;
+    font-size: 32px;
     padding: 10px 0;
   }
 
+  /* due colonne 1-15 / 16-fine */
   .days{
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -290,31 +264,30 @@ body.night .today .event{
 
   .month-half{
     display: block;
-    min-height: 0;
   }
 
   .month-half .day{
-    gap: 10px;
-    padding: 6px 0;
+    gap: 8px;
+    padding: 4px 0;
   }
 
   .day-number{
-    font-size: 38px;
-    width: 48px;
+    font-size: 34px;
+    width: 44px;
   }
 
   .day-name{
-    font-size: 14px;
-    width: 36px;
+    font-size: 13px;
+    width: 34px;
   }
 
   .holiday,
   .birthday{
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .event{
-    font-size: 15px;
+    font-size: 14px;
     margin-top: 2px;
   }
 
@@ -325,7 +298,27 @@ body.night .today .event{
   body.night .today{
     outline-width: 2px;
   }
+
+  /* su mobile niente rotazione kiosk */
+  #calendar-app.rotated{
+    transform: translate(-50%, -50%) !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    display: block;
+  }
+
+  #calendar-app.rotated #calendar{
+    width: 100% !important;
+    max-width: 100% !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  #calendar-app.rotated .controls{
+    display: flex !important;
+    padding: 18px 8px 10px 8px;
+  }
 }
+
 /* ================================
    KIOSK ROOT + ROTAZIONE
    ================================ */
@@ -632,6 +625,7 @@ body.rotated #notes-overlay{
     display: inline-block;
   }
 }
+
 
 
 
