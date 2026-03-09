@@ -1,27 +1,23 @@
 {
-  "2026-02-20": {
-    "text": "Prova token",
-    "done": false
-  },
-  "2026-02-26": {
-    "text": "Prova k"
-  },
-  "2026-03-02": {
-    "text": "PULIZIE SIGNORA"
-  },
-  "2026-04-07": {
-    "text": "Nostro primo incontro. Io apatica lui uno semo"
-  },
-  "2026-05-04": {
-    "text": "Appuntamento denuncia redditi fabio ore 11:30"
-  },
-  "2026-03-15": {
-    "text": "Fabio fa mercatino a POMPONESCO"
-  },
-  "2026-03-22": {
-    "text": "Imbottigliare birra"
-  },
-  "2026-04-13": {
-    "text": "Inizia Cesaroni su canale 5"
-  }
+  "2026-02-20": [
+    "Prova token"
+  ],
+  "2026-02-26": [
+    "Prova k"
+  ],
+  "2026-03-02": [
+    "PULIZIE SIGNORA"
+  ],
+  "2026-05-04": [
+    "Appuntamento denuncia redditi fabio ore 11:30"
+  ],
+  "2026-03-15": [
+    "Fabio fa mercatino a POMPONESCO"
+  ],
+  "2026-03-22": [
+    "Imbottigliare birra"
+  ],
+  "2026-04-13": [
+    "Inizia Cesaroni su canale 5"
+  ]
 }
