@@ -516,15 +516,17 @@ body.night #calendar-app.rotated .side-month .day{
   display: none !important;
 }
 
-/* ===== OVERLAY NOTE / LISTA SPESA ===== */
+/* ===== OVERLAY NOTE / LISTA SPESA - FULL SCREEN ===== */
 .notes-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.65);
+  width: 100vw;
+  height: 100vh;
+  background: #0b0b0b;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
+  align-items: stretch;
+  justify-content: stretch;
+  z-index: 99999;
 }
 
 .notes-overlay.hidden {
@@ -532,46 +534,32 @@ body.night #calendar-app.rotated .side-month .day{
 }
 
 .notes-box {
-  width: min(900px, 92vw);
-  height: min(520px, 88vh);
+  width: 100vw;
+  height: 100vh;
   background: #111;
   color: #fff;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-  padding: 16px;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
+}
+
+.notes-header {
+  flex: 0 0 auto;
 }
 
 .notes-header .notes-title {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 34px;
+  font-weight: 800;
   letter-spacing: 0.5px;
 }
 
 .notes-header .notes-hint {
-  opacity: 0.75;
-  font-size: 14px;
-  margin-top: 4px;
-}
-
-.notes-input {
-  width: 100%;
-  height: 120px;
-  resize: none;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.06);
-  color: #fff;
-  padding: 12px;
+  opacity: 0.8;
   font-size: 18px;
-  line-height: 1.3;
-  outline: none;
-}
-
-.notes-input:focus {
-  border-color: rgba(255,255,255,0.35);
+  margin-top: 6px;
 }
 
 .notes-footer {
@@ -579,13 +567,14 @@ body.night #calendar-app.rotated .side-month .day{
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  flex: 0 0 auto;
 }
 
 .notes-btn {
   border: 0;
   border-radius: 12px;
-  padding: 10px 14px;
-  font-size: 16px;
+  padding: 14px 20px;
+  font-size: 20px;
   cursor: pointer;
   background: rgba(255,255,255,0.15);
   color: #fff;
@@ -596,18 +585,24 @@ body.night #calendar-app.rotated .side-month .day{
 }
 
 .notes-list-wrap {
-  flex: 1;
-  overflow: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.12);
   background: rgba(255,255,255,0.04);
-  padding: 10px;
+  padding: 18px;
 }
 
 .notes-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 32px;
+  line-height: 1.4;
+  font-family: system-ui, sans-serif;
+  color: #fff;
 }
 
 .notes-item {
@@ -629,16 +624,6 @@ body.night #calendar-app.rotated .side-month .day{
   margin-left: 8px;
 }
 
-/* FIX OVERLAY NOTE quando calendario è ruotato */
-#calendar-app.rotated ~ #notes-overlay,
-#calendar-app.rotated + #notes-overlay,
-#calendar-app.rotated #notes-overlay,
-body.rotated #notes-overlay{
-  transform: rotate(0deg);
-  transform-origin: center center;
-  width: 100vh;
-  height: 100vw;
-}
 /* Pulsanti solo mobile */
 .mobile-only {
   display: none;
@@ -650,22 +635,27 @@ body.rotated #notes-overlay{
   }
 }
 
+/* NOTE full screen più compatte su telefono */
+@media (max-width: 900px) {
+  .notes-box {
+    padding: 14px;
+  }
 
+  .notes-header .notes-title {
+    font-size: 24px;
+  }
 
+  .notes-header .notes-hint {
+    font-size: 14px;
+  }
 
+  .notes-btn {
+    font-size: 16px;
+    padding: 10px 14px;
+  }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  .notes-list {
+    font-size: 18px;
+    line-height: 1.35;
+  }
+}
