@@ -521,7 +521,7 @@ body.night #calendar-app.rotated .side-month .day{
   position: fixed;
   inset: 0;
   width: 100vw;
-  height: 300vh;
+  height: 200vh;
   background: #0b0b0b;
   display: flex;
   align-items: stretch;
@@ -562,7 +562,7 @@ body.night #calendar-app.rotated .side-month .day{
 
 .notes-header .notes-hint {
   opacity: 0.8;
-  font-size: 18px;
+  font-size: 30px;
   margin-top: 6px;
 }
 
