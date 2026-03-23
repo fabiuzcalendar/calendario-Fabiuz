@@ -622,7 +622,7 @@ body.night #calendar-app.rotated .side-month .day{
   padding: 10px 12px;
   border-radius: 10px;
   background: rgba(255,255,255,0.06);
-  font-size: 18px;
+  font-size: 30px;
   cursor: pointer;
   user-select: none;
 }
