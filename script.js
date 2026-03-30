@@ -320,8 +320,8 @@ function stopFastNotesRefresh(){
     const now = new Date();
     const minutesNow = now.getHours() * 60 + now.getMinutes();
 
-    const nightStart = 21 * 60;
-    const nightEnd   = 6 * 60 + 30;
+    const nightStart = 5 * 60;        // 05:00
+    const nightEnd = 4 * 60 + 30;     // 04:30
 
     const isNight = (minutesNow >= nightStart) || (minutesNow < nightEnd);
     document.body.classList.toggle("night", isNight);
