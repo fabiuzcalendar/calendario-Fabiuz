@@ -310,9 +310,19 @@ function stopFastNotesRefresh(){
 
 (function midnightReload(){
   const now = new Date();
-  const midnight = new Date();
-  midnight.setHours(24,0,0,0);
-  setTimeout(() => location.reload(), midnight - now);
+
+  const nextMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0, 1, 0
+  );
+
+  const msUntilReload = nextMidnight - now;
+
+  setTimeout(() => {
+    location.reload();
+  }, msUntilReload);
 })();
 
 (function nightMode(){
