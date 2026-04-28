@@ -308,21 +308,16 @@ function stopFastNotesRefresh(){
   notesFastTimer = null;
 }
 
-(function midnightReload(){
-  const now = new Date();
+(function dayChangeWatcher(){
+  let lastDay = new Date().toDateString();
 
-  const nextMidnight = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + 1,
-    0, 1, 0
-  );
+  setInterval(() => {
+    const nowDay = new Date().toDateString();
 
-  const msUntilReload = nextMidnight - now;
-
-  setTimeout(() => {
-    location.reload();
-  }, msUntilReload);
+    if (nowDay !== lastDay) {
+      location.reload();
+    }
+  }, 30000);
 })();
 
 (function nightMode(){
