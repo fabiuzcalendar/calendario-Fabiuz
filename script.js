@@ -1,6 +1,6 @@
 
 
-const today = new Date();
+let today = new Date();
 let currentDate = new Date(today);
 
 const monthNames = [
@@ -157,7 +157,8 @@ function renderCalendar(containerId, titleId, y, m, showBirthdays, isMain){
   title.textContent = `${monthNames[m]} ${y}`;
 
   const daysInMonth = new Date(y, m + 1, 0).getDate();
-  const todayIso = today.toISOString().slice(0,10);
+  today = new Date();
+  const todayIso = toISO(today);
 
   let leftCol, rightCol;
   if (isMain){
@@ -315,7 +316,10 @@ function stopFastNotesRefresh(){
     const nowDay = new Date().toDateString();
 
     if (nowDay !== lastDay) {
-      location.reload();
+      today = new Date();
+      currentDate = new Date(today);
+      renderAll();
+      lastDay = nowDay;
     }
   }, 30000);
 })();
